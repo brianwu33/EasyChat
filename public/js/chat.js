@@ -41,7 +41,8 @@ socket.on("message", (message) => {
 	console.log(message);
 	//Render the template with the message data
 	const html = Mustache.render(messageTemplate, {
-		message,
+		message: message.text,
+		createdAt: moment(message.createdAt).format("h:mm a"),
 	});
 	//Insert the template into the DOM
 	$messages.insertAdjacentHTML("beforeend", html);
@@ -51,11 +52,12 @@ socket.on("sendMessage", (message) => {
 });
 
 //Received Location Message
-socket.on("locationMessage", (url) => {
-	console.log(url);
+socket.on("locationMessage", (message) => {
+	console.log(message);
 	//Render the template with the message data
 	const html = Mustache.render(locationMessageTemplate, {
-		url,
+		url: message.url,
+		createdAt: moment(message.createdAt).format("h:mm a"),
 	});
 	//Insert the template into the DOM
 	$messages.insertAdjacentHTML("beforeend", html);
