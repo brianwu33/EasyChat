@@ -43,28 +43,42 @@ io.on("connection", (socket) => {
         // Join the room
         socket.join(user.room);
         // Welcome the user to the room
-        socket.emit("message", generateMessage("Welcome!"));
+        socket.emit("message", generateMessage("Admin", "Welcome!"));
         // Broadcast an event to everyone in the room
         socket.broadcast.to(user.room).emit(
             "message",
-            generateMessage(`${user.username}
-       has joined!`)
+            generateMessage(
+                "Admin",
+                `${user.username}
+       has joined!`
+            )
         );
+        io.to(user.room).emit("roomData", {
+            room: user.room,
+            users: getUsersInRoom(user.room),
+        });
         callback();
     });
 
     socket.on("sendMessage", (message, callback) => {
+        const user = getUser(socket.id);
+        const room = user.room;
+
         const filter = new Filter();
         if (filter.isProfane(message)) {
             return callback("Profanity is not allowed!");
         }
-        io.to("lol").emit("message", generateMessage(message));
+        io.to(room).emit("message", generateMessage(user.username, message));
         callback();
     });
     socket.on("sendLocation", (coords, callback) => {
-        io.emit(
+        const user = getUser(socket.id);
+        const room = user.room;
+
+        io.to(room).emit(
             "locationMessage",
             generateLocationMessage(
+                user.username,
                 `https://google.com/maps?q=${coords.latitude},${coords.longitude}`
             )
         );
@@ -75,8 +89,12 @@ io.on("connection", (socket) => {
         if (user) {
             io.to(user.room).emit(
                 "message",
-                generateMessage(`${user.username} has left!`)
+                generateMessage("Admin", `${user.username} has left!`)
             );
+            io.to(user.room).emit("roomData", {
+                room: user.room,
+                users: getUsersInRoom(user.room),
+            });
         }
     });
 });
